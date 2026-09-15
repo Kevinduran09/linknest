@@ -43,7 +43,7 @@ export default function SettingsScreen(): React.JSX.Element {
       <AppCard style={{ padding: 18, gap: 8 }}><AppText variant="h2">Local-first</AppText><AppText muted>Tu biblioteca vive en este dispositivo. No necesitas una cuenta ni un backend para usar LinkNest.</AppText></AppCard>
       <AppCard pressable={true} onPress={() => router.push('/inbox')} style={{ padding: 18, gap: 5 }}><AppText variant="h2">Abrir Inbox</AppText><AppText muted>Revisa los enlaces capturados recientemente.</AppText></AppCard>
       <View style={{ gap: 10 }}><AppText variant="h2">Backup</AppText><AppText muted>Exporta tus colecciones, enlaces, etiquetas y notas como JSON.</AppText><View style={{ flexDirection: 'row', gap: 10 }}><AppButton label="Exportar" onPress={() => void exportBackup()} style={{ flex: 1 }} /><AppButton label="Importar" variant="secondary" onPress={() => void importBackup()} style={{ flex: 1 }} /></View></View>
-      <View style={{ gap: 5 }}><AppText variant="h2">Versión</AppText><AppText muted>LinkNest MVP · SQLite schema 1</AppText></View>
+      <View style={{ gap: 5 }}><AppText variant="h2">Versión</AppText><AppText muted>LinkNest MVP · SQLite schema 2</AppText></View>
     </Screen>
   );
 }

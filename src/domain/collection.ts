@@ -13,3 +13,4 @@ export type Collection = {
 
 export const UNSORTED_COLLECTION_ID = 'system-unsorted';
 
+export const COLLECTION_COLORS = ['#665CF6', '#49C7A6', '#FF7A70', '#F3C35A', '#4B9BFF'] as const;

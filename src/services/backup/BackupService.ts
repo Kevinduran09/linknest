@@ -5,6 +5,7 @@ import type { Collection } from '@/src/domain/collection';
 import type { Link } from '@/src/domain/link';
 import type { Tag } from '@/src/domain/tag';
 import { isLinkNestBackup } from '@/src/domain/backup';
+import { UNSORTED_COLLECTION_ID } from '@/src/domain/collection';
 
 export async function createBackup(db: SQLiteDatabase): Promise<LinkNestBackup> {
   const collectionRows = await db.getAllAsync<Record<string, unknown>>('SELECT * FROM collections');
@@ -39,13 +40,20 @@ export function parseBackup(json: string): LinkNestBackup {
 
 export async function restoreBackupReplace(db: SQLiteDatabase, backup: LinkNestBackup): Promise<void> {
   if (!isLinkNestBackup(backup)) throw new Error('El backup no es compatible con LinkNest');
+  const userCollections = backup.collections.filter((item) => !item.isSystem);
+  const collectionIds = new Set([UNSORTED_COLLECTION_ID, ...userCollections.map((item) => item.id)]);
+  const tagIds = new Set(backup.tags.map((item) => item.id));
+  const linkIds = new Set(backup.links.map((item) => item.id));
+  if (collectionIds.size !== userCollections.length + 1) throw new Error('El backup contiene colecciones duplicadas');
+  if (tagIds.size !== backup.tags.length || linkIds.size !== backup.links.length) throw new Error('El backup contiene identificadores duplicados');
+  if (backup.linkTags.some((relation) => !linkIds.has(relation.linkId) || !tagIds.has(relation.tagId))) throw new Error('El backup contiene etiquetas sin enlace válido');
   await db.withTransactionAsync(async () => {
     await db.execAsync('DELETE FROM link_tags; DELETE FROM links; DELETE FROM tags; DELETE FROM collections WHERE is_system = 0;');
-    for (const collection of backup.collections.filter((item) => !item.isSystem)) {
+    for (const collection of userCollections) {
       await db.runAsync(
         `INSERT INTO collections (id, name, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`,
-        [collection.id, collection.name, collection.icon, collection.color, collection.parentId, collection.sortOrder, collection.createdAt, collection.updatedAt],
+        [collection.id, collection.name, collection.icon, collection.color, collection.parentId && collectionIds.has(collection.parentId) ? collection.parentId : null, collection.sortOrder, collection.createdAt, collection.updatedAt],
       );
     }
     for (const tag of backup.tags) await db.runAsync('INSERT INTO tags (id, name, created_at) VALUES (?, ?, ?)', [tag.id, tag.name, tag.createdAt]);
@@ -55,7 +63,7 @@ export async function restoreBackupReplace(db: SQLiteDatabase, backup: LinkNestB
          image_url, favicon_url, site_name, domain, author, notes, collection_id, status, metadata_state, metadata_error,
          is_favorite, source, created_at, updated_at, last_opened_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [link.id, link.originalUrl, link.normalizedUrl, link.resolvedUrl, link.canonicalUrl, link.urlFingerprint, link.title, link.description, link.imageUrl, link.faviconUrl, link.siteName, link.domain, link.author, link.notes, link.collectionId, link.status, link.metadataState, link.metadataError, link.isFavorite ? 1 : 0, link.source, link.createdAt, link.updatedAt, link.lastOpenedAt],
+        [link.id, link.originalUrl, link.normalizedUrl, link.resolvedUrl, link.canonicalUrl, link.urlFingerprint, link.title, link.description, link.imageUrl, link.faviconUrl, link.siteName, link.domain, link.author, link.notes, link.collectionId && collectionIds.has(link.collectionId) ? link.collectionId : link.collectionId ? UNSORTED_COLLECTION_ID : null, link.status, link.metadataState, link.metadataError, link.isFavorite ? 1 : 0, link.source, link.createdAt, link.updatedAt, link.lastOpenedAt],
       );
     }
     for (const relation of backup.linkTags) await db.runAsync('INSERT INTO link_tags (link_id, tag_id) VALUES (?, ?)', [relation.linkId, relation.tagId]);

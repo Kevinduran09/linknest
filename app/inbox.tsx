@@ -38,10 +38,9 @@ export default function InboxScreen(): React.JSX.Element {
             <AppButton label="Guardar en Unsorted" onPress={() => void saveToUnsorted(link.id)} style={{ flex: 1 }} />
             <AppButton label="Eliminar" variant="danger" onPress={() => void deleteLink(link.id)} style={{ flex: 0.55 }} />
           </View>
-          <AppText variant="caption" muted>La previsualización se resolverá en la siguiente fase.</AppText>
+          <AppText variant="caption" muted>La previsualización se completa automáticamente cuando hay conexión.</AppText>
         </View>
       ))}
     </Screen>
   );
 }
-

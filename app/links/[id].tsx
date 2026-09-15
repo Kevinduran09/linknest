@@ -16,6 +16,8 @@ import type { Link } from '@/src/domain/link';
 import type { Tag } from '@/src/domain/tag';
 import { TagsRepository } from '@/src/database/repositories/TagsRepository';
 import { useTheme } from '@/src/theme/ThemeProvider';
+import { LocalMetadataProvider } from '@/src/services/metadata/LocalMetadataProvider';
+import { resolveMetadataForLink } from '@/src/features/metadata/resolveMetadata';
 
 export default function LinkDetailScreen(): React.JSX.Element {
   const db = useSQLiteContext();
@@ -25,6 +27,7 @@ export default function LinkDetailScreen(): React.JSX.Element {
   const [tags, setTags] = useState<Tag[]>([]);
   const [notes, setNotes] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const [retryingMetadata, setRetryingMetadata] = useState(false);
   const load = useCallback(async () => {
     const [nextLink, nextTags] = await Promise.all([new LinksRepository(db).getById(id), new TagsRepository(db).listForLink(id)]);
     setLink(nextLink);
@@ -73,10 +76,21 @@ export default function LinkDetailScreen(): React.JSX.Element {
     await load();
   }
 
+  async function retryMetadata(): Promise<void> {
+    if (retryingMetadata) return;
+    setRetryingMetadata(true);
+    try {
+      await resolveMetadataForLink(new LinksRepository(db), new LocalMetadataProvider(), currentLink, { maxAttempts: 2 });
+      await load();
+    } finally {
+      setRetryingMetadata(false);
+    }
+  }
+
   return (
     <Screen>
       <ScreenHeader title="Detalle" subtitle={link.domain} back actions={<IconButton icon={Trash2} label="Eliminar enlace" tone="danger" onPress={() => void deleteLink()} />} />
-      <AppCard style={{ overflow: 'hidden' }}><LinkPreview imageUrl={link.imageUrl} domain={link.domain} height={190} /><View style={{ padding: 18, gap: 10 }}><AppText variant="h1">{link.title || link.domain}</AppText><AppText muted>{link.originalUrl}</AppText><AppText variant="caption" style={{ color: colors.mint }}>{link.metadataState === 'PENDING' ? 'Preview pendiente de resolver' : link.metadataState}</AppText></View></AppCard>
+      <AppCard style={{ overflow: 'hidden' }}><LinkPreview imageUrl={link.imageUrl} domain={link.domain} height={190} /><View style={{ padding: 18, gap: 10 }}><AppText variant="h1">{link.title || link.domain}</AppText><AppText muted>{link.originalUrl}</AppText><AppText variant="caption" style={{ color: link.metadataState === 'FAILED' ? colors.coral : colors.mint }}>{link.metadataState === 'PENDING' ? 'Preview pendiente de resolver' : link.metadataState === 'FAILED' ? 'No se pudo cargar la preview' : link.metadataState === 'RESOLVING' ? 'Cargando preview…' : 'Preview lista'}</AppText>{link.metadataState === 'FAILED' ? <AppButton label={retryingMetadata ? 'Reintentando…' : 'Reintentar preview'} variant="secondary" onPress={() => void retryMetadata()} disabled={retryingMetadata} /> : null}</View></AppCard>
       <View style={{ flexDirection: 'row', gap: 10 }}><AppButton label="Abrir" onPress={() => void openLink()} style={{ flex: 1 }} /><AppButton label="Compartir" variant="secondary" onPress={() => void shareLink()} style={{ flex: 1 }} /><IconButton icon={Star} label={link.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'} onPress={() => void toggleFavorite()} tone={link.isFavorite ? 'primary' : 'default'} /></View>
       {link.description ? <View style={{ gap: 8 }}><AppText variant="h2">Descripción</AppText><AppText muted>{link.description}</AppText></View> : null}
       <View style={{ gap: 10 }}><AppText variant="h2">Etiquetas</AppText><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{tags.map((tag) => <View key={tag.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 12, backgroundColor: `${colors.primary}18` }}><AppText variant="caption" style={{ color: colors.primary }}>#{tag.name}</AppText><AppText variant="caption" onPress={() => void removeTag(tag.id)} style={{ color: colors.muted }}>×</AppText></View>)}</View><View style={{ flexDirection: 'row', gap: 8 }}><TextInput value={tagInput} onChangeText={setTagInput} onSubmitEditing={() => void addTag()} placeholder="Añadir etiqueta" placeholderTextColor={colors.muted} autoCapitalize="none" style={{ flex: 1, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingHorizontal: 12, color: colors.text }} /><AppButton label="Añadir" variant="secondary" onPress={() => void addTag()} /></View></View>

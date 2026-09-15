@@ -57,12 +57,14 @@ export class CollectionsRepository {
   }
 
   async create(input: Pick<Collection, 'name' | 'icon' | 'color'>): Promise<Collection> {
+    const name = input.name.trim();
+    if (!name) throw new Error('El nombre de la colección no puede estar vacío');
     const timestamp = now();
     const id = createId('collection');
     await this.db.runAsync(
       `INSERT INTO collections (id, name, icon, color, parent_id, is_system, sort_order, created_at, updated_at)
        VALUES (?, ?, ?, ?, NULL, 0, 0, ?, ?)`,
-      [id, input.name.trim(), input.icon, input.color, timestamp, timestamp],
+      [id, name, input.icon, input.color, timestamp, timestamp],
     );
     const collection = await this.getById(id);
     if (!collection) throw new Error('No se pudo crear la colección');
@@ -70,12 +72,16 @@ export class CollectionsRepository {
   }
 
   async update(id: string, input: Pick<Collection, 'name' | 'icon' | 'color'>): Promise<void> {
-    await this.db.runAsync('UPDATE collections SET name = ?, icon = ?, color = ?, updated_at = ? WHERE id = ? AND is_system = 0', [input.name.trim(), input.icon, input.color, now(), id]);
+    const name = input.name.trim();
+    if (!name) throw new Error('El nombre de la colección no puede estar vacío');
+    await this.db.runAsync('UPDATE collections SET name = ?, icon = ?, color = ?, updated_at = ? WHERE id = ? AND is_system = 0', [name, input.icon, input.color, now(), id]);
   }
 
   async delete(id: string): Promise<void> {
     if (id === UNSORTED_COLLECTION_ID) throw new ProtectedCollectionError();
-    await this.db.runAsync('DELETE FROM collections WHERE id = ? AND is_system = 0', id);
-    await this.db.runAsync('UPDATE links SET collection_id = ? WHERE collection_id = ?', [UNSORTED_COLLECTION_ID, id]);
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync('UPDATE links SET collection_id = ? WHERE collection_id = ?', [UNSORTED_COLLECTION_ID, id]);
+      await this.db.runAsync('DELETE FROM collections WHERE id = ? AND is_system = 0', id);
+    });
   }
 }

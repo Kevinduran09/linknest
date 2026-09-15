@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { migration001 } from '@/src/database/migrations/001_initial';
+import { migration002 } from '@/src/database/migrations/002_search';
 
 type Migration = {
   version: number;
@@ -10,6 +11,7 @@ type Migration = {
 
 const migrations: Migration[] = [
   { version: 1, name: 'initial_schema', up: migration001 },
+  { version: 2, name: 'full_text_search', up: migration002 },
 ];
 
 export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
@@ -25,4 +27,3 @@ export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
     currentVersion = migration.version;
   }
 }
-

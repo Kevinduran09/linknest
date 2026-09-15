@@ -182,16 +182,22 @@ export class LinksRepository {
   }
 
   async search(query: string): Promise<Link[]> {
-    const pattern = `%${query.trim()}%`;
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) return [];
+    const pattern = `%${normalizedQuery}%`;
+    const ftsQuery = normalizedQuery
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((term) => `"${term.replaceAll('"', '""')}"*`)
+      .join(' AND ');
     const rows = await this.db.getAllAsync<LinkRow>(
       `SELECT DISTINCT ${selectColumns} FROM links l
        LEFT JOIN link_tags lt ON lt.link_id = l.id
        LEFT JOIN tags t ON t.id = lt.tag_id
-       WHERE l.title LIKE ? OR l.description LIKE ? OR l.original_url LIKE ?
-       OR l.resolved_url LIKE ? OR l.domain LIKE ? OR l.site_name LIKE ?
-       OR l.author LIKE ? OR l.notes LIKE ? OR t.name LIKE ?
+       WHERE l.id IN (SELECT link_id FROM links_fts WHERE links_fts MATCH ?)
+       OR t.name LIKE ? COLLATE NOCASE
        ORDER BY l.created_at DESC`,
-      [pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern],
+      [ftsQuery, pattern],
     );
     return rows.map(mapLink);
   }

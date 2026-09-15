@@ -12,14 +12,16 @@ La primera vertical funcional incluye:
 - Quick Save manual y validación/normalización de URLs.
 - Inbox para enlaces pendientes.
 - Colecciones, detalle de colección y detalle de enlace.
-- Búsqueda local con `LIKE`.
+- Búsqueda local con FTS5 y fallback para etiquetas.
 - Preparación del Share Sheet Android mediante `expo-sharing` y `+native-intent`.
 - Resolución local de metadata con prioridad OG > Twitter Card > HTML y fallback no destructivo.
 - Tags y notas editables desde el detalle del enlace.
 - Exportación e importación de backup JSON versionado.
-- Menú contextual base para las colecciones mediante long press.
+- Edición de nombre y color de colecciones mediante menú contextual.
+- Reintentos de metadata con timeout, límites de respuesta y acción manual desde el detalle.
+- Validación estructural y referencias seguras al restaurar backups.
 
-El refinamiento de animaciones, edición avanzada de colecciones, FTS5, reintentos de metadata y hardening siguen pendientes.
+El refinamiento de animaciones, las pruebas en dispositivos físicos y el empaquetado de distribución siguen pendientes.
 
 ## Desarrollo
 

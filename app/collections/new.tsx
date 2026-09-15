@@ -9,15 +9,14 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Screen } from '@/src/components/ui/Screen';
 import { ScreenHeader } from '@/src/components/ui/ScreenHeader';
 import { CollectionsRepository } from '@/src/database/repositories/CollectionsRepository';
+import { COLLECTION_COLORS } from '@/src/domain/collection';
 import { useTheme } from '@/src/theme/ThemeProvider';
-
-const palette = ['#665CF6', '#49C7A6', '#FF7A70', '#F3C35A', '#4B9BFF'];
 
 export default function NewCollectionScreen(): React.JSX.Element {
   const db = useSQLiteContext();
   const { colors } = useTheme();
   const [name, setName] = useState('');
-  const [color, setColor] = useState(palette[0]);
+  const [color, setColor] = useState<string>(COLLECTION_COLORS[0]);
 
   async function createCollection(): Promise<void> {
     if (!name.trim()) return;
@@ -35,11 +34,10 @@ export default function NewCollectionScreen(): React.JSX.Element {
       <View style={{ gap: 12 }}>
         <AppText variant="label">Color</AppText>
         <View style={{ flexDirection: 'row', gap: 14 }}>
-          {palette.map((item) => <Pressable key={item} onPress={() => setColor(item)} accessibilityRole="button" accessibilityLabel={`Elegir color ${item}`} style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: item, alignItems: 'center', justifyContent: 'center', borderWidth: color === item ? 3 : 0, borderColor: colors.text }}>{color === item ? <Check size={20} color="#FFFFFF" /> : null}</Pressable>)}
+          {COLLECTION_COLORS.map((item) => <Pressable key={item} onPress={() => setColor(item)} accessibilityRole="button" accessibilityLabel={`Elegir color ${item}`} style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: item, alignItems: 'center', justifyContent: 'center', borderWidth: color === item ? 3 : 0, borderColor: colors.text }}>{color === item ? <Check size={20} color="#FFFFFF" /> : null}</Pressable>)}
         </View>
       </View>
       <AppButton label="Crear colección" onPress={() => void createCollection()} disabled={!name.trim()} />
     </Screen>
   );
 }
-
