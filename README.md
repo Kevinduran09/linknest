@@ -41,6 +41,12 @@ npm run android
 
 Expo Go no sustituye un build nativo para validar la recepción desde Chrome, YouTube, TikTok o Pinterest.
 
+## Releases automáticos
+
+Cada push a `main` ejecuta GitHub Actions, valida el proyecto, genera el APK Android y publica un Release privado con el archivo instalable. También se puede iniciar manualmente desde la pestaña **Actions** de GitHub mediante el workflow `Android APK Release`.
+
+El APK generado está orientado al uso personal y pruebas. Para instalarlo, descarga el archivo `.apk` del Release y ábrelo en Android; si ya existe una versión anterior firmada con la misma clave, se actualizará sobre ella.
+
 ## Decisiones importantes
 
 - SQLite es la fuente de verdad; la URL se persiste antes de cualquier metadata de red.
