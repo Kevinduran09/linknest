@@ -16,7 +16,7 @@ jobs:
   build-and-release:
     name: Build and publish APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -52,7 +52,7 @@ jobs:
       - name: Build signed release APK
         run: |
           chmod +x android/gradlew
-          ./android/gradlew --no-daemon --stacktrace -p android assembleRelease
+          ./android/gradlew --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a -p android assembleRelease
 
       - name: Prepare release metadata
         id: metadata
