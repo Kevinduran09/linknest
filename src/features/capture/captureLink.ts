@@ -19,6 +19,5 @@ export async function captureLink(
 ): Promise<CaptureLinkResult> {
   const candidate = extractFirstHttpUrl(input.url) ?? input.url.trim();
   if (!isValidHttpUrl(candidate)) throw new InvalidUrlError();
-  return repository.createPending({ originalUrl: candidate, source: input.source });
+  return repository.createSaved({ originalUrl: candidate, source: input.source });
 }
-

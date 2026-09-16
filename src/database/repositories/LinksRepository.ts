@@ -83,6 +83,14 @@ export class LinksRepository {
   }
 
   async createPending(input: CreatePendingLinkInput): Promise<{ link: Link; duplicate: boolean }> {
+    return this.createCaptured(input, 'PENDING', null);
+  }
+
+  async createSaved(input: CreatePendingLinkInput): Promise<{ link: Link; duplicate: boolean }> {
+    return this.createCaptured(input, 'SAVED', UNSORTED_COLLECTION_ID);
+  }
+
+  private async createCaptured(input: CreatePendingLinkInput, status: Link['status'], collectionId: string | null): Promise<{ link: Link; duplicate: boolean }> {
     const normalizedUrl = normalizeUrl(input.originalUrl);
     const fingerprint = fingerprintUrl(normalizedUrl);
     const existing = await this.getByFingerprint(fingerprint);
@@ -99,9 +107,9 @@ export class LinksRepository {
         title, description, image_url, favicon_url, site_name, domain, author, notes,
         collection_id, status, metadata_state, metadata_error, is_favorite, source,
         created_at, updated_at, last_opened_at
-      ) VALUES (?, ?, ?, NULL, NULL, ?, NULL, NULL, NULL, NULL, NULL, ?, NULL, NULL, NULL,
-        'PENDING', 'PENDING', NULL, 0, ?, ?, ?, NULL)`,
-      [id, input.originalUrl, normalizedUrl, fingerprint, domainFromUrl(normalizedUrl), input.source, timestamp, timestamp],
+      ) VALUES (?, ?, ?, NULL, NULL, ?, NULL, NULL, NULL, NULL, NULL, ?, NULL, NULL, ?,
+        ?, 'PENDING', NULL, 0, ?, ?, ?, NULL)`,
+      [id, input.originalUrl, normalizedUrl, fingerprint, domainFromUrl(normalizedUrl), collectionId, status, input.source, timestamp, timestamp],
     );
 
     const link = await this.getById(id);

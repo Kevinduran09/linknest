@@ -31,6 +31,7 @@ export function LinkCard({ link, onPress, onLongPress, onMenu, compact = false }
         </View>
         <AppText variant="h2" numberOfLines={2}>{title}</AppText>
         {!compact && link.description ? <AppText muted numberOfLines={2}>{link.description}</AppText> : null}
+        {link.notes ? <AppText variant="caption" muted numberOfLines={1}>Nota: {link.notes}</AppText> : null}
         {link.status === 'PENDING' ? <AppText variant="caption" style={{ color: colors.mint }}>Pendiente de revisar</AppText> : null}
         {link.metadataState === 'FAILED' ? <AppText variant="caption" style={{ color: colors.coral }}>Preview no disponible</AppText> : null}
       </View>

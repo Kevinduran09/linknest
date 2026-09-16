@@ -13,6 +13,7 @@ import { InvalidSharedContentError } from '@/src/domain/errors';
 import { useTheme } from '@/src/theme/ThemeProvider';
 import { LocalMetadataProvider } from '@/src/services/metadata/LocalMetadataProvider';
 import { resolveMetadataForLink } from '@/src/features/metadata/resolveMetadata';
+import { UNSORTED_COLLECTION_ID } from '@/src/domain/collection';
 
 export default function ShareHandlerScreen(): React.JSX.Element {
   const db = useSQLiteContext();
@@ -33,9 +34,9 @@ export default function ShareHandlerScreen(): React.JSX.Element {
         if (!url) throw new InvalidSharedContentError();
         const result = await captureLink(new LinksRepository(db), { url, source: 'share' });
         if (!result.duplicate) void resolveMetadataForLink(new LinksRepository(db), new LocalMetadataProvider(), result.link);
-        setMessage(result.duplicate ? 'Este enlace ya estaba guardado' : 'Guardado en Inbox');
+        setMessage(result.duplicate ? 'Este enlace ya estaba guardado' : 'Guardado en Unsorted');
         clearSharedPayloads();
-        setTimeout(() => router.replace('/'), 650);
+        setTimeout(() => router.replace(`/collections/${result.link.collectionId ?? UNSORTED_COLLECTION_ID}`), 650);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'No se pudo guardar el contenido compartido');
         clearSharedPayloads();

@@ -27,7 +27,7 @@ export function QuickSaveBar({ onSave }: QuickSaveBarProps): React.JSX.Element {
       const result = await onSave(value);
       setValue('');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert(result.duplicate ? 'Ya estaba guardado' : 'Guardado en Inbox', result.duplicate ? 'El enlace ya existe en tu biblioteca.' : 'Puedes revisarlo cuando quieras.');
+      Alert.alert(result.duplicate ? 'Ya estaba guardado' : 'Guardado en Unsorted', result.duplicate ? 'El enlace ya existe en tu biblioteca.' : 'Se abrió la colección Unsorted.');
     } catch (error) {
       Alert.alert('No se pudo guardar', error instanceof Error ? error.message : 'Intenta nuevamente.');
     } finally {
